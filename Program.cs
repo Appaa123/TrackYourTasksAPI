@@ -1,14 +1,17 @@
+using Microsoft.Extensions.Caching.Memory;
 using TrackYourTasksAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register in-memory cache
+builder.Services.AddMemoryCache();
+
+// Register MongoTaskService (it now depends on IMemoryCache)
 builder.Services.AddSingleton<MongoTaskService>();
 
 var app = builder.Build();
