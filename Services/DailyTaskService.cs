@@ -23,8 +23,15 @@ namespace TrackYourTasksAPI.Services
         public async Task<DailyTask?> GetAsync(string id) =>
             await _dailyTasks.Find(x => x.Id == id).FirstOrDefaultAsync();
 
-        // Create a new daily task
-        public async Task CreateAsync(DailyTask task) =>
+        // Create a new daily task. Ensure Id exists (generate GUID if not provided).
+        public async Task CreateAsync(DailyTask task)
+        {
+            if (string.IsNullOrWhiteSpace(task.Id))
+            {
+                task.Id = Guid.NewGuid().ToString();
+            }
+
             await _dailyTasks.InsertOneAsync(task);
+        }
     }
 }

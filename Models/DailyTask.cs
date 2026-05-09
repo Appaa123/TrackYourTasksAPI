@@ -5,9 +5,9 @@ namespace TrackYourTasksAPI.Models
 {
     public class DailyTask
     {
+        // Id is optional for incoming requests; the service will generate a GUID if missing.
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         public string Title { get; set; } = string.Empty;
 
@@ -17,18 +17,14 @@ namespace TrackYourTasksAPI.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // UI-only selection flag for bulk actions — ignored by BSON/DB
-        [BsonIgnore]
+        // Persist selection flag so API returns the client-sent value
         public bool IsSelected { get; set; }
 
-        // Daily recurring task time, if any
-        [BsonIgnore]
-        public TimeSpan? RecurrenceTime { get; set; }
+        // Daily recurring task time stored as a DateTime (ISO format in JSON)
+        public DateTime? RecurrenceTime { get; set; }
 
-        // Calculates the next occurrence of this task based on the stored time
+        // UI-only computed property (not stored)
         [BsonIgnore]
-        public DateTime? NextOccurrence => RecurrenceTime.HasValue
-            ? DateTime.Today.Add(RecurrenceTime.Value)
-            : (DateTime?)null;
+        public DateTime? NextOccurrence => RecurrenceTime;
     }
 }

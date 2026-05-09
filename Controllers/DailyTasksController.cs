@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using TrackYourTasksAPI.Models;
 using TrackYourTasksAPI.Services;
@@ -16,33 +17,41 @@ namespace TrackYourTasksAPI.Controllers
         }
 
         // GET api/dailytasks
+        // Returns an array of envelopes: [{ "task": { ... } }, ...]
         [HttpGet]
-        public async Task<ActionResult<List<DailyTask>>> Get()
+        public async Task<ActionResult<List<DailyTasks>>> Get()
         {
             var list = await _service.GetAsync();
-            return Ok(list);
+            var envelopes = list.Select(t => new DailyTasks { Task = t }).ToList();
+            return Ok(envelopes);
         }
 
         // GET api/dailytasks/{id}
-        [HttpGet("{id:length(24)}")]
-        public async Task<ActionResult<DailyTask>> GetById(string id)
+        // Removed strict 24-length constraint so GUID ids are supported
+        [HttpGet("{id}")]
+        public async Task<ActionResult<DailyTasks>> GetById(string id)
         {
             var task = await _service.GetAsync(id);
             if (task is null) return NotFound();
-            return Ok(task);
+            return Ok(new DailyTasks { Task = task });
         }
 
         // POST api/dailytasks
+        // Accepts body: { "task": { ... } } and returns the created envelope
         [HttpPost]
-        public async Task<ActionResult<DailyTask>> Create(DailyTask task)
+        public async Task<ActionResult<DailyTasks>> Create([FromBody] DailyTasks envelope)
         {
+            if (envelope?.Task is null)
+                return BadRequest("Request body must contain a 'task' object.");
+
+            var task = envelope.Task;
+
+            // Ensure CreatedAt is set if not provided
+            if (task.CreatedAt == default) task.CreatedAt = DateTime.UtcNow;
+
             await _service.CreateAsync(task);
 
-            // If Mongo assigned an Id, return CreatedAtAction; otherwise return Ok
-            if (!string.IsNullOrEmpty(task.Id))
-                return CreatedAtAction(nameof(GetById), new { id = task.Id }, task);
-
-            return Ok(task);
+            return CreatedAtAction(nameof(GetById), new { id = task.Id }, new DailyTasks { Task = task });
         }
     }
 }
