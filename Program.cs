@@ -8,11 +8,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Register in-memory cache
+// Register in-memory cache (already present if you use caching elsewhere)
 builder.Services.AddMemoryCache();
 
-// Register MongoTaskService (it now depends on IMemoryCache)
+// Register services
 builder.Services.AddSingleton<MongoTaskService>();
+builder.Services.AddSingleton<DailyTaskService>();
 
 var app = builder.Build();
 
