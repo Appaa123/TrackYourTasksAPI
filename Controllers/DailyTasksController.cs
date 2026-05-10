@@ -53,5 +53,43 @@ namespace TrackYourTasksAPI.Controllers
 
             return CreatedAtAction(nameof(GetById), new { id = task.Id }, new DailyTasks { Task = task });
         }
+
+        // PUT api/dailytasks/{id}
+        // Expects a DailyTask JSON body (not wrapped). Matches the client usage:
+        // PUT api/dailytasks/{task.Id} with body = DailyTask
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(string id, [FromBody] DailyTask task)
+        {
+            if (task is null)
+                return BadRequest("Request body must contain a DailyTask object.");
+
+            // Ensure the id in route is used as the persisted id
+            var updated = await _service.UpdateAsync(id, task);
+            if (!updated) return NotFound();
+
+            return NoContent();
+        }
+
+        // DELETE api/dailytasks/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var deleted = await _service.DeleteAsync(id);
+            if (!deleted) return NotFound();
+            return NoContent();
+        }
+
+        // POST api/dailytasks/bulkDelete
+        // Accepts a JSON array of ids: ["id1", "id2", ...]
+        [HttpPost("bulkDelete")]
+        public async Task<IActionResult> BulkDelete([FromBody] List<string> ids)
+        {
+            if (ids == null || ids.Count == 0)
+                return BadRequest("Request body must contain a non-empty array of ids.");
+
+            var deletedCount = await _service.BulkDeleteAsync(ids);
+            // Return NoContent regardless, or optionally report count:
+            return NoContent();
+        }
     }
 }
